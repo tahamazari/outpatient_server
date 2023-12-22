@@ -23,5 +23,6 @@ func CheckRecordExistence(errorMessage string, model interface{}, query string, 
 	return nil
 }
 
+const ErrDependentNotFound = "Dependent not found or does not belong to the requesting employee"
 const ErrBillingClaimNotFound = "Billing Claim not found or does not belong to the requesting employee"
 const ErrMedicalBillNotFound = "Medical Bill not found or does not belong to the specified Billing Claim"
