@@ -10,11 +10,11 @@ import (
 )
 
 func CreateDependent(c echo.Context) error {
-	request_dependent := new(models.Dependent)
+	requestDependent := new(models.Dependent)
 	db := db.DB()
 
 	// Binding data
-	if err := c.Bind(request_dependent); err != nil {
+	if err := c.Bind(requestDependent); err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -22,13 +22,13 @@ func CreateDependent(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	new_dependent := &models.Dependent{
-		EmployeeID:   request_dependent.EmployeeID,
-		Name:         request_dependent.Name,
-		Relationship: request_dependent.Relationship,
+	newDependent := &models.Dependent{
+		EmployeeID:   requestDependent.EmployeeID,
+		Name:         requestDependent.Name,
+		Relationship: requestDependent.Relationship,
 	}
 
-	if err := db.Create(&new_dependent).Error; err != nil {
+	if err := db.Create(&newDependent).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -37,7 +37,7 @@ func CreateDependent(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"data": new_dependent,
+		"data": newDependent,
 	}
 
 	return c.JSON(http.StatusOK, response)
