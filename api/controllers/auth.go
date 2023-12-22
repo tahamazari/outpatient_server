@@ -9,6 +9,15 @@ import (
 	"github.com/tahamazari/outpatient_server/utils"
 )
 
+type EmployeeResponse struct {
+	ID            int    `json:"id"`
+	CompanyID     string `json:"company_id"`
+	Name          string `json:"name"`
+	Email         string `json:"email"`
+	ContactNumber string `json:"contact_number"`
+	CertificateID string `json:"certificate_id"`
+}
+
 func SignUp(c echo.Context) error {
 	requestSignupEmployee := new(models.Employee)
 	db := db.DB()
@@ -78,13 +87,20 @@ func SignUp(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Error generating refresh token"})
 	}
 
-	// Clear the password before sending the response
-	newEmployee.Password = ""
+	// Create response without the password field
+	employeeResponse := EmployeeResponse{
+		ID:            newEmployee.ID,
+		CompanyID:     newEmployee.CompanyID,
+		Name:          newEmployee.Name,
+		Email:         newEmployee.Email,
+		ContactNumber: newEmployee.ContactNumber,
+		CertificateID: newEmployee.CertificateID,
+	}
 
 	// Include tokens in the response
 	response := map[string]interface{}{
 		"data": map[string]interface{}{
-			"employee": newEmployee,
+			"employee": employeeResponse,
 			"tokens": map[string]interface{}{
 				"access_token":  accessToken,
 				"refresh_token": refreshToken,
@@ -140,13 +156,20 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Error generating refresh token"})
 	}
 
-	// Clear the password before sending the response
-	employee.Password = ""
+	// Create response without the password field
+	employeeResponse := EmployeeResponse{
+		ID:            employee.ID,
+		CompanyID:     employee.CompanyID,
+		Name:          employee.Name,
+		Email:         employee.Email,
+		ContactNumber: employee.ContactNumber,
+		CertificateID: employee.CertificateID,
+	}
 
 	// Include tokens in the response
 	response := map[string]interface{}{
 		"data": map[string]interface{}{
-			"employee": employee,
+			"employee": employeeResponse,
 			"tokens": map[string]interface{}{
 				"access_token":  accessToken,
 				"refresh_token": refreshToken,
