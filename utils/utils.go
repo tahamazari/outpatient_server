@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tahamazari/outpatient_server/api/db"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ErrorMessageArgs struct {
@@ -23,6 +24,17 @@ func CheckRecordExistence(errorMessage string, model interface{}, query string, 
 	return nil
 }
 
+func HashPassword(password string) (string, error) {
+	// Use a secure password hashing library like bcrypt
+	// Example using bcrypt:
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
+const ErrEmployeeWithEmailAlreadyExists = "User with this email already exists"
 const ErrDependentNotFound = "Dependent not found or does not belong to the requesting employee"
 const ErrBillingClaimNotFound = "Billing Claim not found or does not belong to the requesting employee"
 const ErrMedicalBillNotFound = "Medical Bill not found or does not belong to the specified Billing Claim"
