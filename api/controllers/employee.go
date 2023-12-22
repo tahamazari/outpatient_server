@@ -9,11 +9,11 @@ import (
 )
 
 func CreateEmployee(c echo.Context) error {
-	employee_model := new(models.Employee)
+	requestEmployee := new(models.Employee)
 	db := db.DB()
 
 	// Binding data
-	if err := c.Bind(employee_model); err != nil {
+	if err := c.Bind(requestEmployee); err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -21,12 +21,14 @@ func CreateEmployee(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	new_employee := &models.Employee{
-		Name:  employee_model.Name,
-		Email: employee_model.Email,
+	newEmployee := &models.Employee{
+		Name:          requestEmployee.Name,
+		Email:         requestEmployee.Email,
+		ContactNumber: requestEmployee.ContactNumber,
+		CertificateID: requestEmployee.CertificateID,
 	}
 
-	if err := db.Create(&new_employee).Error; err != nil {
+	if err := db.Create(&newEmployee).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -35,7 +37,7 @@ func CreateEmployee(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"data": new_employee,
+		"data": newEmployee,
 	}
 
 	return c.JSON(http.StatusOK, response)
