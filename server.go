@@ -45,6 +45,8 @@ func main() {
 	e.PUT("/medical_bills/:id", controllers.UpdateMedicalBill)
 	e.DELETE("/medical_bills/:employee_id/:billing_claim_id/:medical_bill_id", controllers.DeleteMedicalBill)
 
+	e.POST("/auth/sign_up", controllers.SignUp)
+
 	// Start the server
 	e.Start(":8080")
 }

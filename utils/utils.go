@@ -2,17 +2,14 @@ package utils
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/tahamazari/outpatient_server/api/db"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type ErrorMessageArgs struct {
-	ErrorMessage string
-	Model        interface{}
-	Query        string
-	Args         []interface{}
-}
+var jwtSecret = []byte("your-secret-key")
 
 func CheckRecordExistence(errorMessage string, model interface{}, query string, args []interface{}) error {
 	db := db.DB()
@@ -22,6 +19,39 @@ func CheckRecordExistence(errorMessage string, model interface{}, query string, 
 	}
 
 	return nil
+}
+
+func GenerateJWT(employeeID int) (string, error) {
+	claims := jwt.MapClaims{
+		"employee_id": employeeID,
+		"exp":         time.Now().Add(time.Hour * 2).Unix(), // Token expires in 2 hours
+		"iat":         time.Now().Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString(jwtSecret)
+	if err != nil {
+		return "", err
+	}
+
+	return signedToken, nil
+}
+
+// GenerateRefreshToken generates a refresh token
+func GenerateRefreshToken(employeeID int) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id":     employeeID,
+		"employee_id": time.Now().Add(time.Hour * 24 * 30).Unix(), // Refresh token expires in 30 days
+		"iat":         time.Now().Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString(jwtSecret)
+	if err != nil {
+		return "", err
+	}
+
+	return signedToken, nil
 }
 
 func HashPassword(password string) (string, error) {
@@ -34,7 +64,7 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-const ErrEmployeeWithEmailAlreadyExists = "User with this email already exists"
+const ErrEmployeeWithEmailAlreadyExists = "Employee with this email/employeeId/certificateId already exists"
 const ErrDependentNotFound = "Dependent not found or does not belong to the requesting employee"
 const ErrBillingClaimNotFound = "Billing Claim not found or does not belong to the requesting employee"
 const ErrMedicalBillNotFound = "Medical Bill not found or does not belong to the specified Billing Claim"

@@ -24,6 +24,7 @@ func CreateEmployee(c echo.Context) error {
 	newEmployee := &models.Employee{
 		Name:          requestEmployee.Name,
 		Email:         requestEmployee.Email,
+		CompanyID:     requestEmployee.CompanyID,
 		ContactNumber: requestEmployee.ContactNumber,
 		CertificateID: requestEmployee.CertificateID,
 	}

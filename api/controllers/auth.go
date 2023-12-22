@@ -21,8 +21,22 @@ func SignUp(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
+	// Check for missing required fields
+	if requestSignupEmployee.Name == "" || requestSignupEmployee.Email == "" || requestSignupEmployee.CompanyID == "" ||
+		requestSignupEmployee.ContactNumber == "" || requestSignupEmployee.CertificateID == "" || requestSignupEmployee.Password == "" {
+		data := map[string]interface{}{
+			"message": "Missing required fields",
+		}
+		return c.JSON(http.StatusBadRequest, data)
+	}
+
 	var existingEmployee models.Employee
-	if err := db.Where("email = ?", requestSignupEmployee.Email).First(&existingEmployee).Error; err == nil {
+	if err := db.Where(
+		"email = ? OR company_id = ? OR certificate_id = ?",
+		requestSignupEmployee.Email,
+		requestSignupEmployee.CompanyID,
+		requestSignupEmployee.CertificateID,
+	).First(&existingEmployee).Error; err == nil {
 		data := map[string]interface{}{
 			"message": utils.ErrEmployeeWithEmailAlreadyExists,
 		}
@@ -41,6 +55,7 @@ func SignUp(c echo.Context) error {
 		Name:          requestSignupEmployee.Name,
 		Email:         requestSignupEmployee.Email,
 		Password:      hashedPassword,
+		CompanyID:     requestSignupEmployee.CompanyID,
 		ContactNumber: requestSignupEmployee.ContactNumber,
 		CertificateID: requestSignupEmployee.CertificateID,
 	}
@@ -52,10 +67,29 @@ func SignUp(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
+	accessToken, err := utils.GenerateJWT(newEmployee.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Error generating access token"})
+	}
+
+	// Create and sign the refresh token
+	refreshToken, err := utils.GenerateRefreshToken(newEmployee.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Error generating refresh token"})
+	}
+
 	// Clear the password before sending the response
 	newEmployee.Password = ""
+
+	// Include tokens in the response
 	response := map[string]interface{}{
-		"data": newEmployee,
+		"data": map[string]interface{}{
+			"employee": newEmployee,
+			"tokens": map[string]interface{}{
+				"access_token":  accessToken,
+				"refresh_token": refreshToken,
+			},
+		},
 	}
 
 	return c.JSON(http.StatusOK, response)
