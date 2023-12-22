@@ -94,3 +94,65 @@ func SignUp(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func Login(c echo.Context) error {
+	// Assuming the login request is sent as JSON in the request body
+	loginRequest := new(struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	})
+
+	if err := c.Bind(loginRequest); err != nil {
+		data := map[string]interface{}{
+			"message": "Invalid login request",
+		}
+		return c.JSON(http.StatusBadRequest, data)
+	}
+
+	db := db.DB()
+
+	// Find the user by email
+	var employee models.Employee
+	if err := db.Where("email = ?", loginRequest.Email).First(&employee).Error; err != nil {
+		data := map[string]interface{}{
+			"message": "Invalid email or password",
+		}
+		return c.JSON(http.StatusUnauthorized, data)
+	}
+
+	// Verify the password
+	if !utils.CheckPasswordHash(loginRequest.Password, employee.Password) {
+		data := map[string]interface{}{
+			"message": "Invalid email or password",
+		}
+		return c.JSON(http.StatusUnauthorized, data)
+	}
+
+	// Generate new access token
+	accessToken, err := utils.GenerateJWT(employee.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Error generating access token"})
+	}
+
+	// Generate new refresh token
+	refreshToken, err := utils.GenerateRefreshToken(employee.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Error generating refresh token"})
+	}
+
+	// Clear the password before sending the response
+	employee.Password = ""
+
+	// Include tokens in the response
+	response := map[string]interface{}{
+		"data": map[string]interface{}{
+			"employee": employee,
+			"tokens": map[string]interface{}{
+				"access_token":  accessToken,
+				"refresh_token": refreshToken,
+			},
+		},
+	}
+
+	return c.JSON(http.StatusOK, response)
+}

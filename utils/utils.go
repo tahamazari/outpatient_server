@@ -64,6 +64,12 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
+// CheckPasswordHash compares a hashed password with its possible plaintext equivalent
+func CheckPasswordHash(plainPassword, hashedPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
+	return err == nil
+}
+
 const ErrEmployeeWithEmailAlreadyExists = "Employee with this email/employeeId/certificateId already exists"
 const ErrDependentNotFound = "Dependent not found or does not belong to the requesting employee"
 const ErrBillingClaimNotFound = "Billing Claim not found or does not belong to the requesting employee"
